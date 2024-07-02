@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1046803877172",
+    "project_id": "presupuesto-408d0",
+    "storage_bucket": "presupuesto-408d0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046803877172:android:86623a9b8518c98a842961",
+        "android_client_info": {
+          "package_name": "com.example.finance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbzTcTkuQmNX8llWes3kqZy6kz6VoSo30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046803877172:android:f58f548000f62954842961",
+        "android_client_info": {
+          "package_name": "com.jenniferdelossantos.finance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbzTcTkuQmNX8llWes3kqZy6kz6VoSo30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
