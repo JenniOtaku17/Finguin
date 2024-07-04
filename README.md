@@ -1,6 +1,6 @@
-# finance
+# Finguin
 
-A new Flutter project.
+Money manager flutter app.
 
 ## Getting Started
 
