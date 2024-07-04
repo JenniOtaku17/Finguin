@@ -1,3 +1,16 @@
+buildscript {
+    ext.kotlin_version = '1.8.22' // Update to the latest version
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Other dependencies
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -15,4 +28,12 @@ subprojects {
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.jetbrains.kotlin') {
+            details.useVersion kotlin_version
+        }
+    }
 }

@@ -141,7 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? const TransactionsPage()
                             : index == 4
                                 ? const StatsScreen()
-                                : Container(),
+                                : Container(
+                                  child: Text('oh oh oh')
+                                ),
               );
             } else {
               return Scaffold(
