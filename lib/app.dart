@@ -1,3 +1,4 @@
+import 'package:finguin/screens/add_transaction/blocs/get_category_transactions_bloc/get_category_transactions_bloc.dart';
 import 'package:finguin/screens/auth/blocs/change_password_bloc/change_password_bloc.dart';
 import 'package:finguin/screens/auth/blocs/logout_bloc/logout_bloc.dart';
 import 'package:finguin/screens/auth/blocs/update_profile_bloc/update_profile_bloc.dart';
@@ -50,6 +51,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => GetFilteredTransactionsBloc(transactionRepository),
+        ),
+        BlocProvider(
+          create: (context) => GetCategoryTransactionsBloc(transactionRepository),
         ),
         BlocProvider(
           create: (context) => CreateCategoryBloc(transactionRepository),

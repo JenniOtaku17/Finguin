@@ -13,6 +13,16 @@ Future getCategoryCreation(BuildContext context, Category category) {
   final Category originalCategory;
   category != Category.empty ? originalCategory = category : originalCategory = Category.empty;
 
+  // Crear una copia de la categoría para editar
+  Category editableCategory = Category(
+    categoryId: category.categoryId,
+    name: category.name,
+    maxAmount: category.maxAmount,
+    type: category.type,
+    color: category.color,
+    icon: category.icon,
+  );
+
   List<String> categoriesTypes = ["+", "-"];
 
   List<String> categoriesIcons = [
@@ -55,10 +65,11 @@ Future getCategoryCreation(BuildContext context, Category category) {
   TextEditingController categoryNameController = TextEditingController();
   TextEditingController categoryTypeController = TextEditingController();
   TextEditingController categoryMaxAmountController = TextEditingController(); 
-  
-  categoryNameController.text = category.name;
-  category.maxAmount != 0 ? categoryMaxAmountController.text = category.maxAmount.toString(): null;
-  category.type == '-'? categoryTypeController.text = 'Deduction' : category.type == '+'? categoryTypeController.text = 'Addition': null;
+
+  categoryNameController.text = editableCategory.name;
+  editableCategory.color == 0 ? editableCategory.color = 4294967295 : null;
+  editableCategory.maxAmount != 0 ? categoryMaxAmountController.text = editableCategory.maxAmount.toString() : null;
+  editableCategory.type == '-' ? categoryTypeController.text = 'Deduction' : editableCategory.type == '+' ? categoryTypeController.text = 'Addition' : null;
 
   return showDialog(
     context: context,
@@ -79,7 +90,7 @@ Future getCategoryCreation(BuildContext context, Category category) {
                     _isFormValid = false;
                     iconIsExpended = false;
                     typeIsExpended = false;
-                    category = Category.empty;
+                    editableCategory = Category.empty;
                   });
 
                   if(originalCategory != Category.empty){
@@ -104,7 +115,7 @@ Future getCategoryCreation(BuildContext context, Category category) {
                 }
               },
               child: AlertDialog(
-                title: const Text('Create a Category'),
+                title: const Text('Category Creation'),
                 content: SizedBox(
                   width: MediaQuery.of(context).size.width,
                   child: Form(
@@ -161,7 +172,9 @@ Future getCategoryCreation(BuildContext context, Category category) {
                               fillColor: Colors.white,
                               hintText: 'Type',
                               prefixIcon: Icon(
-                                categoryTypeController.text == '-' ? FontAwesomeIcons.minus : FontAwesomeIcons.plus,
+                                editableCategory.type == '-' ? FontAwesomeIcons.minus : 
+                                editableCategory.type == '+' ? FontAwesomeIcons.plus:
+                                FontAwesomeIcons.plusMinus,
                                 size: 16,
                               ),
                               suffixIcon: const Icon(CupertinoIcons.chevron_down, size: 12),
@@ -189,8 +202,8 @@ Future getCategoryCreation(BuildContext context, Category category) {
                                         return GestureDetector(
                                           onTap: () {
                                             setState(() {
-                                              category.type = categoriesTypes[i];
-                                              category.type == '-'
+                                              editableCategory.type = categoriesTypes[i];
+                                              editableCategory.type == '-'
                                                   ? categoryTypeController.text = 'Deduction'
                                                   : categoryTypeController.text = "Addition";
                                               typeIsExpended = false;
@@ -249,9 +262,9 @@ Future getCategoryCreation(BuildContext context, Category category) {
                             decoration: InputDecoration(
                               isDense: true,
                               filled: true,
-                              suffixIcon: category.icon != ''?
+                              suffixIcon: editableCategory.icon != ''?
                               ImageIcon(
-                                AssetImage("assets/${category.icon}.png"),
+                                AssetImage("assets/${editableCategory.icon}.png"),
                                 size: 24,
                               )
                               :const Icon(CupertinoIcons.chevron_down, size: 12),
@@ -286,8 +299,9 @@ Future getCategoryCreation(BuildContext context, Category category) {
                                         return GestureDetector(
                                           onTap: () {
                                             setState(() {
-                                              category.icon = categoriesIcons[i];
+                                              editableCategory.icon = categoriesIcons[i];
                                               iconIsExpended = false;
+                                              _isFormValid = _formKey.currentState?.validate() ?? false;
                                             });
                                           },
                                           child: Container(
@@ -296,7 +310,7 @@ Future getCategoryCreation(BuildContext context, Category category) {
                                             decoration: BoxDecoration(
                                               border: Border.all(
                                                 width: 3,
-                                                color: category.icon == categoriesIcons[i]
+                                                color: editableCategory.icon == categoriesIcons[i]
                                                     ? Colors.green
                                                     : Colors.grey,
                                               ),
@@ -323,10 +337,11 @@ Future getCategoryCreation(BuildContext context, Category category) {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         ColorPicker(
-                                          pickerColor: Color(category.color),
+                                          pickerColor: Color(editableCategory.color),
                                           onColorChanged: (value) {
                                             setState(() {
-                                              category.color = value.value;
+                                              editableCategory.color = value.value;
+                                              _isFormValid = _formKey.currentState?.validate() ?? false;
                                             });
                                           },
                                         ),
@@ -364,7 +379,7 @@ Future getCategoryCreation(BuildContext context, Category category) {
                               suffixIcon: Icon(
                                 CupertinoIcons.app_fill,
                                 size: 30,
-                                color: Color(category.color),
+                                color: Color(editableCategory.color),
                               ),
                               hintText: 'Color',
                               border: OutlineInputBorder(
@@ -384,20 +399,19 @@ Future getCategoryCreation(BuildContext context, Category category) {
                                 : TextButton(
                                     onPressed: _isFormValid
                                     ? () {
-
                                         String id;
-                                        category.categoryId == ''? id = const Uuid().v1() : id = category.categoryId;
+                                        editableCategory.categoryId == '' ? id = const Uuid().v1() : id = editableCategory.categoryId;
 
-                                        category = Category(
+                                        editableCategory = Category(
                                           categoryId: id,
                                           name: categoryNameController.text,
                                           maxAmount: double.parse(categoryMaxAmountController.text),
-                                          type: category.type,
-                                          color: category.color,
-                                          icon: category.icon,
+                                          type: editableCategory.type,
+                                          color: editableCategory.color,
+                                          icon: editableCategory.icon,
                                         );
 
-                                        context.read<CreateCategoryBloc>().add(CreateCategory(category));
+                                        context.read<CreateCategoryBloc>().add(CreateCategory(editableCategory));
                                       }
                                     : null,
                                     style: TextButton.styleFrom(
@@ -424,5 +438,4 @@ Future getCategoryCreation(BuildContext context, Category category) {
       );
     },
   );
-  
 }

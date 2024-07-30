@@ -60,9 +60,12 @@ class FirebaseTransactionRepository implements TransactionRepository {
       await transactionCollection
       .where('category', isEqualTo: transaction.category)
       .get()
-      .then((value) => value.docs.map((e) => 
-        trans.add(repo.Transaction.fromEntity(TransactionEntity.fromDocument(e.data() as Map<String, dynamic>)))
-      ).toList());
+      .then((value) => value.docs.map((e) {
+        var tempTransaction = repo.Transaction.fromEntity(TransactionEntity.fromDocument(e.data() as Map<String, dynamic>));
+        if(tempTransaction.date.month == transaction.date.month && tempTransaction.date.year == transaction.date.year && transaction.transactionId != tempTransaction.transactionId){
+          trans.add(tempTransaction);
+        }
+      }).toList());
 
       double total = 0;
       if(trans.isNotEmpty){
@@ -134,6 +137,34 @@ class FirebaseTransactionRepository implements TransactionRepository {
         ).toList());
  
     }catch(e){
+      log(e.toString());
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<repo.Transaction>> getCategoryTransactionsFiltered(String category, int? month, int? year) async {
+    try {
+      DocumentReference userDoc = usersCollection.doc(_auth.currentUser!.uid.toString());
+      CollectionReference transactionCollection = userDoc.collection('transactions');
+
+      Query query = transactionCollection.where('category', isEqualTo: category);
+
+      if (month != null && year != null) {
+        DateTime firstDayOfMonth = DateTime(year, month, 1);
+        DateTime lastDayOfMonth = DateTime(year, month + 1, 0);
+        query = query
+            .where('date', isGreaterThanOrEqualTo: firstDayOfMonth, isLessThanOrEqualTo: lastDayOfMonth);
+      }
+
+      return await query
+          .orderBy('date', descending: true)
+          .get()
+          .then((value) => value.docs.map((e) => 
+            repo.Transaction.fromEntity(TransactionEntity.fromDocument(e.data() as Map<String, dynamic>))
+          ).toList());
+
+    } catch (e) {
       log(e.toString());
       rethrow;
     }

@@ -69,7 +69,7 @@ class _MyChartState extends State<MyChart> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4.0, 16.0, 4.0, 8.0),
+      padding: const EdgeInsets.fromLTRB(2.0, 16.0, 2.0, 8.0),
       child: SizedBox(
         height: 400, // Ensure the chart has a finite height
         child: BarChart(
@@ -94,12 +94,12 @@ class _MyChartState extends State<MyChart> {
         BarChartRodData(
           toY: y,
           color: Theme.of(context).colorScheme.outline,
-          width: 10,
+          width: 7,
         ),
         BarChartRodData(
           toY: yTotal,
           color: Theme.of(context).colorScheme.primary,
-          width: 10,
+          width: 7,
         ),
       ],
     );
@@ -141,14 +141,14 @@ class _MyChartState extends State<MyChart> {
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            reservedSize: 38,
+            reservedSize: 35,
             getTitlesWidget: getTitles,
           ),
         ),
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            reservedSize: 38,
+            reservedSize: 35,
             getTitlesWidget: leftTitles,
             interval: 10000,
           ),

@@ -1,4 +1,5 @@
 import 'package:cool_alert/cool_alert.dart';
+import 'package:finguin/blocs/get_filteredtransactions_bloc/get_filteredtransactions_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -30,23 +31,22 @@ class _AddTransactionState extends State<AddTransaction> {
   bool isExpended = false;
   bool isLoading = false;
   String iconSelected = '';
-  late Transaction transaction;
-  late Transaction originalTransaction;
+  late Transaction editableTransaction;
+  double remaining = 0;
 
   @override
   void initState() {
     super.initState();
-    transaction = widget.transaction ?? Transaction.empty;
+    editableTransaction = widget.transaction ?? Transaction.empty;
     if (widget.transaction == Transaction.empty) {
       dateController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
-      originalTransaction = Transaction.empty;
 
     } else {
-      originalTransaction = transaction;
       amountController.text = widget.transaction!.amount.toString();
       dateController.text = DateFormat('dd/MM/yyyy').format(widget.transaction!.date);
       descriptionController.text = widget.transaction!.description;
     }
+    _updateRemainingAmount(widget.transaction!.category);
   }
 
   @override
@@ -71,7 +71,7 @@ class _AddTransactionState extends State<AddTransaction> {
       isExpended = false;
       _isFormValid = false;
       isLoading = false;
-      transaction = Transaction.empty;
+      editableTransaction = Transaction.empty;
     });
   }
 
@@ -86,7 +86,7 @@ class _AddTransactionState extends State<AddTransaction> {
             isLoading = false; // Stop loading on success
           });
 
-          if(originalTransaction != Transaction.empty){
+          if(widget.transaction != Transaction.empty){
             Navigator.pop(context);
           }
 
@@ -144,6 +144,18 @@ class _AddTransactionState extends State<AddTransaction> {
                             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 20),
+                          editableTransaction.category != ""
+                          ? Center(
+                              child: Text(
+                                "Remaining Amount: ${NumberFormat.currency(locale: 'en_US', symbol: '\$').format(remaining)}",
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color.fromARGB(255, 37, 160, 41)),
+                              ),
+                            )
+                          : Container(),
+                          const SizedBox(height: 5),
                           SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: TextFormField(
@@ -223,11 +235,12 @@ class _AddTransactionState extends State<AddTransaction> {
                                                 child: ListTile(
                                                     onTap: () {
                                                       setState(() {
-                                                        transaction.category = state.categories[i].categoryId;
+                                                        editableTransaction.category = state.categories[i].categoryId;
                                                         iconSelected = state.categories[i].icon;
                                                         categoryController.text = state.categories[i].name;
                                                         isExpended = false; // Collapse the dropdown after selection
                                                       });
+                                                      _updateRemainingAmount(state.categories[i].categoryId);
                                                     },
                                                     leading: Stack(
                                                       alignment: Alignment.center,
@@ -272,14 +285,14 @@ class _AddTransactionState extends State<AddTransaction> {
                             onTap: () async {
                               DateTime? newDate = await showDatePicker(
                                   context: context,
-                                  initialDate: transaction.date,
-                                  firstDate: DateTime.now(),
+                                  initialDate: editableTransaction.date,
+                                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
                                   lastDate: DateTime.now().add(const Duration(days: 365)));
 
                               if (newDate != null) {
                                 setState(() {
                                   dateController.text = DateFormat('dd/MM/yyyy').format(newDate);
-                                  transaction.date = newDate;
+                                  editableTransaction.date = newDate;
                                 });
                               }
                             },
@@ -317,19 +330,19 @@ class _AddTransactionState extends State<AddTransaction> {
                                     onPressed: _isFormValid
                                         ? () {
                                             String id;
-                                            transaction.transactionId == ''? id = const Uuid().v1() : id = transaction.transactionId;
+                                            editableTransaction.transactionId == ''? id = const Uuid().v1() : id = editableTransaction.transactionId;
 
                                             setState(() {
-                                              transaction = Transaction(
+                                              editableTransaction = Transaction(
                                                 transactionId: id,
                                                 amount: double.parse(amountController.text),
-                                                category: transaction.category,
-                                                date: transaction.date,
+                                                category: editableTransaction.category,
+                                                date: editableTransaction.date,
                                                 description: descriptionController.text,
                                               );
                                             });
 
-                                            context.read<CreateTransactionBloc>().add(CreateTransaction(transaction));
+                                            context.read<CreateTransactionBloc>().add(CreateTransaction(editableTransaction));
                                           }
                                         : null,
                                     style: TextButton.styleFrom(
@@ -359,5 +372,30 @@ class _AddTransactionState extends State<AddTransaction> {
         ),
       ),
     );
+  }
+
+  void _updateRemainingAmount(String categoryId) {
+    if (categoryId != '') {
+      DateTime _selectedDate = DateTime.now();
+      final bloc = BlocProvider.of<GetFilteredTransactionsBloc>(context);
+      bloc.add(GetFilteredTransactions(month: _selectedDate.month, year: _selectedDate.year));
+
+      BlocProvider.of<GetFilteredTransactionsBloc>(context).stream.listen((state) {
+        if (state is GetFilteredTransactionsSuccess) {
+          double totalSpent = state.transactions.fold(
+              0.0, (sum, item) => item.category == categoryId ? sum + item.amount : sum);
+
+          Category category = (context.read<GetCategoriesBloc>().state as GetCategoriesSuccess)
+              .categories
+              .firstWhere((category) => category.categoryId == categoryId, orElse: () => Category.empty);
+
+          Future.microtask(() {
+            setState(() {
+              remaining = category.maxAmount - totalSpent;
+            });
+          });
+        }
+      });
+    }
   }
 }

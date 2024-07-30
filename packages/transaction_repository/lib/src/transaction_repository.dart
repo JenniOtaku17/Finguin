@@ -14,5 +14,7 @@ abstract class TransactionRepository {
 
   Future<List<Transaction>> getFilteredTransactions(int month, int year);
 
+  Future<List<Transaction>> getCategoryTransactionsFiltered(String category, int? month, int? year);
+
   Future<void> deleteTransaction(Transaction transaction);
 }
